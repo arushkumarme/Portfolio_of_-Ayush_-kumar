@@ -1,0 +1,29 @@
+{
+  "name": "ayush-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portfolio website for Ayush Kumar",
+  "license": "ISC",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "lucide-react": "^1.61.0",
+    "motion": "^14.5.0",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.2",
+    "sharp": "^0.35.5",
+    "typescript": "5.9.3"
+  }
+}

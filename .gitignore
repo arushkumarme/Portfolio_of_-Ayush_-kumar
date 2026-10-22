@@ -1,0 +1,16 @@
+# Private source material: résumé, original photo, design reference
+refrence/
+reference/
+
+node_modules/
+.next/
+out/
+.vercel/
+next-env.d.ts
+*.tsbuildinfo
+.env
+.env.*
+
+# Local agent tooling
+.claude/
+skills-lock.json
