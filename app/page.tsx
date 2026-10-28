@@ -1,11 +1,19 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { Reveal } from "@/components/Reveal";
+import { SmoothAnchors } from "@/components/SmoothAnchors";
 import { Star } from "@/components/Star";
 
 const EMAIL = "ayush97818@gmail.com";
+
+// Index for staggered type, read by CSS as var(--i)
+const at = (i: number) => ({ "--i": i }) as CSSProperties;
 const LINKEDIN = "https://www.linkedin.com/in/ayush-kumar-189b66225";
 const GITHUB = "https://github.com/Ayush-Das-9";
 const RAG_REPO = "https://github.com/Ayush-Das-9/Rag_Based_AI";
+const TTAI_REPO = "https://github.com/Ayush-Das-9/TTAi";
+const KISAN_REPO = "https://github.com/Ayush-Das-9/Kisan_Mitra";
+const YAKSHA_REPO = "https://github.com/Ayush-Das-9/cs10";
 
 const education = [
   {
@@ -41,6 +49,19 @@ const answering = [
 ];
 
 const stack = ["Python", "FastAPI", "Ollama", "Llama 3.2", "BGE-M3", "OpenAI Whisper", "pandas", "scikit-learn"];
+
+const ttaiStack = ["Python", "FastAPI", "React", "MongoDB", "Gemini", "Groq"];
+
+// Stack as listed on the résumé
+const kisanStack = ["FastAPI", "Vanilla JS", "Uvicorn", "Groq LLM API"];
+
+// Keypad rows and menu options from src/utils/constants.ts in the Kisan_Mitra repository
+const keypad = ["7", "8", "9", "4", "5", "6", "1", "2", "3", "C", "0", "✓"];
+const kisanMenu = [
+  { key: "1", hi: "फसल की जानकारी", en: "Crop information" },
+  { key: "2", hi: "गेहूं समाचार", en: "Wheat news" },
+  { key: "3", hi: "उर्वरक जानकारी", en: "Fertiliser information" },
+];
 
 const chunkSample = `{
   "number": "12",
@@ -84,7 +105,7 @@ export default function Home() {
               <a href="#work">Work</a>
             </li>
             <li>
-              <a href="#resume">Résumé</a>
+              <a href="#resume">Resume</a>
             </li>
             <li>
               <a className="pill pill--yellow" href="#contact">
@@ -96,13 +117,27 @@ export default function Home() {
 
         <div className="hero__stage">
           <h1 className="hero__title">
-            <span className="sr-only">Ayush Kumar, </span>Portfolio
+            <span className="sr-only">Ayush Kumar, Portfolio</span>
+            {/* Set letter by letter, like sorts dropped into a composing stick */}
+            <span className="hero__letters" aria-hidden="true">
+              {"Portfolio".split("").map((ch, i) => (
+                <span key={i} style={at(i)}>
+                  {ch}
+                </span>
+              ))}
+            </span>
           </h1>
 
           <div className="hero__echo" aria-hidden="true">
-            <span>Portfolio</span>
-            <span className="hero__echo-cut">Portfolio</span>
-            <span>Portfolio</span>
+            <span>
+              <span className="drift">Portfolio</span>
+            </span>
+            <span className="hero__echo-cut">
+              <span className="drift">Portfolio</span>
+            </span>
+            <span>
+              <span className="drift">Portfolio</span>
+            </span>
           </div>
 
           <div className="hero__photo">
@@ -119,18 +154,6 @@ export default function Home() {
             <Star className="hero__star hero__star--small" />
             <Star className="hero__star hero__star--corner" />
           </div>
-
-          <ul className="hero__links">
-            <li>
-              <span>GH:</span> <a href={GITHUB}>/Ayush-Das-9</a>
-            </li>
-            <li>
-              <span>LI:</span> <a href={LINKEDIN}>/ayush-kumar</a>
-            </li>
-            <li>
-              <span>EM:</span> <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-            </li>
-          </ul>
         </div>
 
         <div className="hero__band">
@@ -152,12 +175,19 @@ export default function Home() {
         <section className="about" id="about" aria-labelledby="about-title">
           <div className="wrap about__grid">
             <div className="about__text">
-              <h2 className="about__title" id="about-title" data-reveal="">
-                Hello,
+              <h2 className="about__title" id="about-title" data-reveal="greeting">
+                <span className="word" style={at(0)}>
+                  Hello,
+                </span>
                 <br />
-                I&rsquo;m Ayush!
+                <span className="word" style={at(1)}>
+                  I&rsquo;m
+                </span>{" "}
+                <span className="word" style={at(2)}>
+                  Ayush!
+                </span>
               </h2>
-              <div data-reveal="1">
+              <div>
               <p>
                 I&rsquo;m a B.Tech Computer Science &amp; Engineering student at Guru Nanak Dev Engineering College. I
                 work with AI systems, retrieval pipelines and backend development, with a focus on turning technical
@@ -167,14 +197,11 @@ export default function Home() {
                 Most of my projects are written in Python and served with FastAPI. During my internship at IIT Ropar I
                 built Yaksha-Mini, a chatbot that answers from a vector index.
               </p>
-              <a className="pill pill--orange about__link" href={LINKEDIN}>
-                linkedin.com/in/ayush-kumar-189b66225
-              </a>
               </div>
             </div>
 
             <div className="about__side">
-              <div className="portrait" data-reveal="">
+              <div className="portrait" data-reveal="portrait">
                 <div className="portrait__frame">
                   <Image
                     className="portrait__img"
@@ -189,7 +216,7 @@ export default function Home() {
                 <p className="portrait__tag portrait__tag--two">Intern, IIT Ropar</p>
               </div>
 
-              <div className="contact-card" data-reveal="2">
+              <div className="contact-card" data-reveal="card">
                 <h3>Contact</h3>
                 <dl>
                   <div>
@@ -218,15 +245,15 @@ export default function Home() {
 
         <section className="work" id="work" aria-labelledby="work-title">
           <div className="wrap">
-            <div className="work__head" data-reveal="">
+            <div className="work__head" data-reveal="rule">
               <h2 className="work__title" id="work-title">
                 Selected work
               </h2>
-              <p className="meta">01 Case study · 02 Index</p>
+              <p className="meta">01 RAG · 02 TTAI · 03 Kisan Mitra</p>
             </div>
 
             <article className="case" aria-labelledby="case-title">
-              <div className="case__intro" data-reveal="">
+              <div className="case__intro" data-reveal="intro">
                 <p className="case__no" aria-hidden="true">
                   01
                 </p>
@@ -242,7 +269,7 @@ export default function Home() {
               </div>
 
               <div className="case__body">
-                <div className="case__story" data-reveal="">
+                <div className="case__story">
                   <h4>Problem</h4>
                   <p>
                     The course is a series of 18 web development lectures recorded in Hindi. Finding the place where a
@@ -261,7 +288,7 @@ export default function Home() {
                   </p>
                 </div>
 
-                <aside className="case__facts" aria-label="Project details" data-reveal="2">
+                <aside className="case__facts" aria-label="Project details">
                   <h4>Stack</h4>
                   <ul className="case__stack">
                     {stack.map((item) => (
@@ -278,8 +305,8 @@ export default function Home() {
                 </aside>
               </div>
 
-              <figure className="pipeline" data-reveal="">
-                <div className="lane">
+              <figure className="pipeline">
+                <div className="lane" data-reveal="lane">
                   <p className="lane__label">Indexing, run once</p>
                   <ol className="lane__steps">
                     {indexing.map((step, i) => (
@@ -291,7 +318,7 @@ export default function Home() {
                     ))}
                   </ol>
                 </div>
-                <div className="lane">
+                <div className="lane" data-reveal="lane">
                   <p className="lane__label">Answering, per question</p>
                   <ol className="lane__steps" start={5}>
                     {answering.map((step, i) => (
@@ -310,7 +337,7 @@ export default function Home() {
               </figure>
 
               <div className="case__evidence">
-                <figure data-reveal="">
+                <figure>
                   <figcaption>
                     <strong>A stored chunk.</strong> Copied from <code>jsons/12_CSS Selectors MasterClass</code> in the
                     repository.
@@ -319,7 +346,7 @@ export default function Home() {
                     <code>{chunkSample}</code>
                   </pre>
                 </figure>
-                <figure data-reveal="2">
+                <figure>
                   <figcaption>
                     <strong>What /api/query returns.</strong> Response fields as defined in <code>app.py</code>.
                   </figcaption>
@@ -330,18 +357,131 @@ export default function Home() {
               </div>
             </article>
 
-            <ul className="index" aria-label="More work" data-reveal="">
+            <article className="case plate plate--cream" aria-labelledby="ttai-title" data-reveal="panel">
+              <div className="case__intro case__intro--flip" data-reveal="intro">
+                <div>
+                  <h3 className="case__title" id="ttai-title">
+                    TTAI
+                  </h3>
+                  <p className="case__kicker">AI Timetable Generator</p>
+                  <p className="case__lead">An AI study assistant that plans a student&rsquo;s day and tracks syllabus progress.</p>
+                </div>
+                <p className="case__no" aria-hidden="true">
+                  02
+                </p>
+              </div>
+
+              <div className="ttai__body">
+                <figure className="services">
+                  <div className="service">
+                    <p className="service__route">GET /timetable</p>
+                    <ol className="service__flow">
+                      <li>Student&rsquo;s request</li>
+                      <li>LangChain agent on Groq</li>
+                      <li>MongoDB: lectures, attendance, study log</li>
+                      <li>Day plan</li>
+                    </ol>
+                  </div>
+                  <div className="service">
+                    <p className="service__route">POST /progress</p>
+                    <ol className="service__flow">
+                      <li>Photo of notes</li>
+                      <li>Gemini 2.5 Flash</li>
+                      <li>Syllabus done, 0 to 100</li>
+                    </ol>
+                  </div>
+                  <figcaption>Drawn from the repository code.</figcaption>
+                </figure>
+
+                <aside className="ttai__side" aria-label="TTAI details">
+                  <h4>Agent rules</h4>
+                  <ul className="rules">
+                    <li>
+                      <strong>75.5%</strong> below this attendance, never skip
+                    </li>
+                    <li>
+                      <strong>85%</strong> above this, with a backlog, may self-study
+                    </li>
+                    <li>
+                      <strong>12:30</strong> lunch, always
+                    </li>
+                  </ul>
+                  <ul className="case__stack">
+                    {ttaiStack.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <a className="pill pill--ink" href={TTAI_REPO}>
+                    Ayush-Das-9/TTAi
+                  </a>
+                  <p className="meta ttai__note">Fork of mishrayushgit/TTAi · runs locally</p>
+                </aside>
+              </div>
+            </article>
+
+            <article className="case plate plate--green" aria-labelledby="kisan-title" data-reveal="panel">
+              <div className="case__intro" data-reveal="intro">
+                <p className="case__no" aria-hidden="true">
+                  03
+                </p>
+                <div>
+                  <h3 className="case__title" id="kisan-title">
+                    Kisan Mitra
+                  </h3>
+                  <p className="case__kicker">Agriculture assistant</p>
+                  <p className="case__lead">A farming assistant driven by a numpad, designed for rural accessibility.</p>
+                </div>
+              </div>
+
+              <div className="kisan__body">
+                <figure className="keypad" data-reveal="keypad">
+                  <div className="keypad__keys" aria-hidden="true">
+                    {keypad.map((key) => (
+                      <span key={key} className={`keypad__key${"123".includes(key) ? " keypad__key--menu" : ""}`}>
+                        {key}
+                      </span>
+                    ))}
+                  </div>
+                  <ol className="keypad__menu">
+                    {kisanMenu.map((item) => (
+                      <li key={item.key}>
+                        <span className="keypad__no">{item.key}</span>
+                        <span lang="hi">{item.hi}</span>
+                        <span>{item.en}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  <figcaption>Keypad and spoken menu, from the repository. Not a screenshot.</figcaption>
+                </figure>
+
+                <div className="kisan__story">
+                  <p>
+                    Built with FastAPI and the Groq LLM API for farming guidance. The public repository holds an Expo
+                    version of the interface, with the menu read aloud in Hindi.
+                  </p>
+                  <ul className="case__stack">
+                    {kisanStack.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  <a className="pill pill--outline" href={KISAN_REPO}>
+                    Ayush-Das-9/Kisan_Mitra
+                  </a>
+                </div>
+              </div>
+            </article>
+
+            <ul className="index" aria-label="More work">
               <li>
-                <span className="index__no">02</span>
+                <span className="index__no">04</span>
                 <span className="index__name">Yaksha-Mini</span>
                 <span className="index__note">
-                  AI chatbot with vector search and caching, built during the IIT Ropar internship. No public
-                  repository.
+                  AI chatbot with vector search and caching, built during the IIT Ropar internship.
                 </span>
-                <a href="#experience">See experience</a>
+                <a href={YAKSHA_REPO}>github.com/Ayush-Das-9/cs10</a>
               </li>
               <li>
-                <span className="index__no">03</span>
+                <span className="index__no">05</span>
                 <span className="index__name">On GitHub</span>
                 <span className="index__note">Coursework, experiments and smaller projects.</span>
                 <a href={GITHUB}>github.com/Ayush-Das-9</a>
@@ -352,14 +492,14 @@ export default function Home() {
 
         <section className="resume" id="resume" aria-labelledby="resume-title">
           <h2 className="sr-only" id="resume-title">
-            Résumé
+            Resume
           </h2>
           <div className="wrap resume__grid">
             <div className="resume__main">
-              <h3 className="heading heading--yellow" data-reveal="">
+              <h3 className="heading heading--yellow">
                 Education
               </h3>
-              <ol className="timeline" data-reveal="1">
+              <ol className="timeline" data-reveal="timeline">
                 {education.map((item) => (
                   <li key={item.level}>
                     <Star className="timeline__star" />
@@ -372,7 +512,7 @@ export default function Home() {
                 ))}
               </ol>
 
-              <div className="experience" id="experience" data-reveal="">
+              <div className="experience" id="experience" data-reveal="panel">
                 <h3 className="heading">Experience</h3>
                 <ol className="timeline timeline--dark">
                   <li>
@@ -400,15 +540,21 @@ export default function Home() {
             </div>
 
             <div className="resume__side">
-              <div className="resume__echo" aria-hidden="true">
-                <span>Resume</span>
-                <span>Resume</span>
-                <span>Resume</span>
+              <div className="resume__echo" aria-hidden="true" data-reveal="plate">
+                <span>
+                  <span className="drift">Resume</span>
+                </span>
+                <span>
+                  <span className="drift">Resume</span>
+                </span>
+                <span>
+                  <span className="drift">Resume</span>
+                </span>
               </div>
-              <h3 className="heading heading--yellow skills__title" data-reveal="">
+              <h3 className="heading heading--yellow skills__title">
                 Technical skills
               </h3>
-              <dl className="skills" data-reveal="1">
+              <dl className="skills">
                 {skills.map((s) => (
                   <div key={s.group}>
                     <dt>{s.group}</dt>
@@ -422,9 +568,9 @@ export default function Home() {
 
         <section className="honours" aria-label="Hackathons and certifications">
           <div className="wrap honours__grid">
-            <div className="honours__left" data-reveal="">
+            <div className="honours__left">
               <h3 className="heading">Hackathons</h3>
-              <ol className="timeline timeline--light">
+              <ol className="timeline timeline--light" data-reveal="timeline">
                 <li>
                   <Star className="timeline__star" />
                   <span className="timeline__when">Top 10</span>
@@ -443,7 +589,7 @@ export default function Home() {
                 </li>
               </ol>
             </div>
-            <div className="honours__right" data-reveal="1">
+            <div className="honours__right">
               <h3 className="heading">Certifications</h3>
               <ul className="certs">
                 <li>
@@ -462,13 +608,13 @@ export default function Home() {
 
         <section className="contact" id="contact" aria-labelledby="contact-title">
           <div className="wrap contact__grid">
-            <h2 className="contact__title" id="contact-title" data-reveal="">
+            <h2 className="contact__title" id="contact-title" data-reveal="headline">
               Get in
               <br />
               touch!
               <Star className="contact__star" />
             </h2>
-            <ul className="contact__links" data-reveal="2">
+            <ul className="contact__links">
               <li>
                 <span className="meta">Email</span>
                 <a className="pill pill--orange" href={`mailto:${EMAIL}`}>
@@ -492,6 +638,7 @@ export default function Home() {
         </section>
       </main>
       <Reveal />
+      <SmoothAnchors />
     </>
   );
 }

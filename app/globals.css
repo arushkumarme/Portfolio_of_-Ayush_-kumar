@@ -14,6 +14,14 @@
   --mono: var(--font-mono), ui-monospace, Menlo, monospace;
 
   --gutter: clamp(16px, 4vw, 56px);
+
+  /* Motion curves. Entrances decelerate hard; wipes and line draws that travel
+     across the screen use the strong in-out; hover colour uses plain ease. */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-ui: cubic-bezier(0.25, 0.1, 0.25, 1);
   color-scheme: light;
 }
 
@@ -67,6 +75,7 @@ a {
   color: inherit;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
+  transition: text-decoration-color 260ms var(--ease-ui);
 }
 
 a:hover {
@@ -76,6 +85,11 @@ a:hover {
 :focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 4px;
+}
+
+/* Sections focused by in-page links are landmarks, not controls */
+[tabindex="-1"]:focus {
+  outline: none;
 }
 
 img {
@@ -170,24 +184,37 @@ img {
 }
 
 a.pill {
-  transition: background-color 180ms ease, color 180ms ease;
+  transition:
+    background-color 280ms var(--ease-ui),
+    color 280ms var(--ease-ui),
+    transform 160ms var(--ease-out);
 }
 
-a.pill:hover {
-  text-decoration: underline;
+/* Touch fires a sticky hover on tap, so colour feedback is pointer-only */
+@media (hover: hover) and (pointer: fine) {
+  a.pill:hover {
+    text-decoration: underline;
+  }
+
+  .pill--yellow:hover {
+    background: #ffc04a;
+  }
+
+  .pill--orange:hover {
+    background: #f07a50;
+  }
+
+  .pill--outline:hover {
+    background: var(--yellow);
+    color: var(--ink);
+  }
 }
 
-.pill--yellow:hover {
-  background: #ffc04a;
-}
-
-.pill--orange:hover {
-  background: #f07a50;
-}
-
-.pill--outline:hover {
-  background: var(--yellow);
-  color: var(--ink);
+/* Press feedback on the few real buttons-as-links */
+@media (prefers-reduced-motion: no-preference) {
+  a.pill:active {
+    transform: scale(0.97);
+  }
 }
 
 /* ---------- Hero ---------- */
@@ -232,7 +259,7 @@ a.pill:hover {
 
 .nav__links a:not(.pill) {
   text-decoration: underline 1px transparent;
-  transition: text-decoration-color 180ms ease;
+  transition: text-decoration-color 280ms var(--ease-ui);
 }
 
 .nav__links a:not(.pill):hover {
@@ -263,12 +290,19 @@ a.pill:hover {
   color: var(--cream);
 }
 
+/* Letters, greeting words and drifting rows need a box to move */
+.hero__letters > span,
+.about__title .word,
+.drift {
+  display: inline-block;
+}
+
 .hero__echo {
   color: transparent;
   -webkit-text-stroke: 1.5px var(--yellow);
 }
 
-.hero__echo span {
+.hero__echo > span {
   display: block;
 }
 
@@ -318,12 +352,12 @@ a.pill:hover {
 }
 
 .hero__links a {
-  text-decoration: none;
+  text-decoration: underline 1px transparent;
   overflow-wrap: anywhere;
 }
 
 .hero__links a:hover {
-  text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 
 .hero__band {
@@ -451,7 +485,7 @@ a.pill:hover {
     font-size: 16.6cqw;
   }
 
-  .hero__echo span:last-child {
+  .hero__echo > span:last-child {
     display: none;
   }
 
@@ -520,7 +554,15 @@ a.pill:hover {
 .portrait__frame {
   position: relative;
   aspect-ratio: 1 / 0.9;
+}
+
+/* The green block is its own layer so it can grow without clipping the photo */
+.portrait__frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: var(--green);
+  transform-origin: center bottom;
 }
 
 .portrait__img {
@@ -559,6 +601,8 @@ a.pill:hover {
   padding: 1.75rem 2rem 2rem;
   background: var(--ink);
   color: var(--cream);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .contact-card h3 {
@@ -590,6 +634,11 @@ a.pill:hover {
 
 .contact-card a {
   overflow-wrap: anywhere;
+  transition: color 240ms var(--ease-ui), opacity 240ms var(--ease-ui);
+}
+
+.contact-card a:hover {
+  color: var(--yellow);
 }
 
 @media (max-width: 899px) {
@@ -632,8 +681,20 @@ a.pill:hover {
   justify-content: space-between;
   gap: 1rem 2rem;
   flex-wrap: wrap;
+  position: relative;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--ink-soft);
+}
+
+/* Section rule, drawn once on reveal */
+.work__head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--ink-soft);
+  transform-origin: left center;
 }
 
 .work__title {
@@ -757,6 +818,7 @@ a.pill:hover {
 }
 
 .lane__steps {
+  position: relative;
   display: grid;
   grid-auto-columns: minmax(0, 1fr);
   grid-auto-flow: column;
@@ -978,6 +1040,334 @@ a.pill:hover {
   }
 }
 
+/* ---------- Project plates (TTAI, Kisan Mitra) ----------
+   Each further project sits on its own ink plate inside the black work band,
+   so the three case studies read as different prints, not repeated cards. */
+
+.plate {
+  position: relative;
+  isolation: isolate;
+  margin: 0 calc(-1 * min(var(--gutter), 3rem)) clamp(3rem, 6vw, 5rem);
+  padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.25rem, 3vw, 3rem);
+}
+
+/* The plate colour is its own layer so the print motion can move it alone */
+.plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--plate-bg);
+}
+
+.plate--cream {
+  --plate-bg: var(--cream);
+  color: var(--ink);
+}
+
+.plate--green {
+  --plate-bg: var(--green);
+  color: var(--cream);
+}
+
+.plate--cream .case__lead,
+.plate--cream .ttai__side p,
+.plate--cream figcaption {
+  color: var(--ink-soft);
+}
+
+.plate--cream h4 {
+  color: var(--ink);
+}
+
+.plate--cream .case__no {
+  -webkit-text-stroke-color: var(--orange);
+}
+
+.case__intro--flip {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.case__kicker {
+  margin-top: 0.75rem;
+  color: var(--yellow);
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.plate--cream .case__kicker {
+  color: var(--ink-soft);
+}
+
+[lang="hi"] {
+  font-family: "Nirmala UI", "Noto Sans Devanagari", var(--sans);
+}
+
+.pill--ink {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pill--ink:hover {
+    background: #2b2622;
+  }
+}
+
+/* ----- TTAI ----- */
+
+.ttai__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 3rem clamp(2rem, 6vw, 5rem);
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+}
+
+.ttai__story > p {
+  max-width: 36rem;
+}
+
+.services {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.75rem 2rem;
+  align-content: start;
+}
+
+.service {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.service__route {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+}
+
+/* Each service is a vertical chain so long stage names never wrap mid-flow */
+.service__flow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.4rem;
+}
+
+.service__flow li {
+  position: relative;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--ink);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Connector and arrowhead into each following stage */
+.service__flow li + li::before {
+  content: "";
+  position: absolute;
+  top: calc(-1.4rem + 2px);
+  left: 1rem;
+  width: 1px;
+  height: calc(1.4rem - 6px);
+  background: var(--ink);
+}
+
+.service__flow li + li::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: calc(1rem - 4px);
+  border-inline: 4px solid transparent;
+  border-top: 6px solid var(--ink);
+}
+
+.services figcaption {
+  grid-column: 1 / -1;
+}
+
+.service__flow li:last-child {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.services figcaption {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.ttai__side {
+  padding-left: clamp(0rem, 3vw, 2.5rem);
+  border-left: 1px solid rgb(14 12 10 / 0.2);
+}
+
+.ttai__side p {
+  font-size: 0.9375rem;
+}
+
+.ttai__side .pill {
+  margin-top: 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.875rem;
+}
+
+.rules {
+  margin-bottom: 2rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+/* Each threshold reads as a figure, the condition as its caption */
+.rules li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: baseline;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid rgb(14 12 10 / 0.15);
+}
+
+.rules strong {
+  font-family: var(--display);
+  font-size: 1.75rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.ttai__note {
+  margin-top: 0.9rem;
+  color: var(--ink-soft);
+}
+
+
+
+
+
+
+/* ----- Kisan Mitra ----- */
+
+.kisan__body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3rem clamp(2.5rem, 6vw, 6rem);
+  align-items: start;
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1.5rem 2rem;
+  align-items: center;
+}
+
+.keypad__keys {
+  display: grid;
+  grid-template-columns: repeat(3, 3.5rem);
+  gap: 0.5rem;
+}
+
+.keypad__key {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid rgb(246 238 225 / 0.45);
+  font-family: var(--display);
+  font-size: 1.375rem;
+}
+
+.keypad__key--menu {
+  border-color: var(--yellow);
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.keypad__menu {
+  display: grid;
+  gap: 1rem;
+}
+
+.keypad__menu li {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  column-gap: 0.5rem;
+}
+
+.keypad__no {
+  grid-row: span 2;
+  color: var(--yellow);
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: 1.9;
+}
+
+.keypad__menu [lang="hi"] {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+.keypad__menu span:last-child {
+  color: var(--cream-dim);
+  font-size: 0.875rem;
+}
+
+.keypad figcaption {
+  grid-column: 1 / -1;
+  max-width: 24rem;
+  color: var(--cream-dim);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+}
+
+.kisan__story p {
+  max-width: 34rem;
+}
+
+.kisan__story .case__stack {
+  margin-top: 1.75rem;
+}
+
+.kisan__story .pill {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 899px) {
+  .plate {
+    margin-inline: calc(-1 * var(--gutter));
+  }
+
+  .case__intro--flip {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .case__intro--flip .case__no {
+    order: -1;
+  }
+
+  .ttai__body,
+  .kisan__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ttai__side {
+    padding: 2rem 0 0;
+    border-left: 0;
+    border-top: 1px solid rgb(14 12 10 / 0.2);
+  }
+
+  .services {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+
+
+  .keypad {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ---------- Résumé ---------- */
 
 .resume {
@@ -1018,6 +1408,7 @@ a.pill:hover {
   height: calc(100% + 0.6rem);
   border-left: 1px solid currentColor;
   opacity: 0.35;
+  transform-origin: center top;
 }
 
 .timeline__star {
@@ -1062,8 +1453,16 @@ a.pill:hover {
   z-index: 2;
   margin: clamp(3rem, 5vw, 4rem) 0 -14rem calc(-1 * clamp(1.5rem, 3.5vw, 3rem));
   padding: clamp(2rem, 4vw, 3rem);
-  background: var(--yellow);
   color: var(--ink);
+}
+
+/* The yellow is its own layer (a print plate) so it can move without the text */
+.experience::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--yellow);
 }
 
 .experience .timeline {
@@ -1319,96 +1718,194 @@ a.pill:hover {
   }
 }
 
-/* ---------- Motion ---------- */
+/* ---------- Motion: "printed in register" ----------
+   The reference reads like a screen-printed poster: flat plates of green,
+   orange and gold, outlined type, stars like rubber stamps. The motion treats
+   the page as a print run:
+   - Plates: layered pieces arrive as separate inks, slightly off register,
+     then lock into place with a short decelerating settle.
+   - Stamps: starbursts land with a quick press, scale down onto the page.
+   - Type: headlines rise out of a mask. Reading text never moves.
+   Everything plays once. Reveal.tsx only arms blocks below the fold, so
+   nothing is hidden without JS, and it does nothing under reduced motion. */
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Hero opening, CSS only so it starts with the first paint. The headline and
-     portrait are partly visible from the first frame; nothing waits on JS. */
+  /* ----- Hero (CSS only, runs from first paint) ----- */
   .nav {
-    animation: rise-in 420ms cubic-bezier(0.2, 0.65, 0.25, 1) both;
+    animation: nav-in 600ms var(--ease-settle) both;
   }
 
-  .hero__title {
-    animation: mask-up 620ms 60ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  /* Plate 1, the cream type, set sort by sort: each letter rises out of its
+     own mask, left to right. The top of every glyph shows from frame one. */
+  .hero__letters > span {
+    animation: sort-set 1000ms calc(60ms + var(--i) * 45ms) var(--ease-enter) backwards;
   }
 
+  /* Plate 2, orange + portrait: uncovers while the group settles */
   .hero__photo img {
-    animation: block-in 680ms 120ms cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation: block-in 1200ms 160ms var(--ease-enter) backwards;
   }
 
-  .hero__echo span {
-    animation: rise-in 480ms cubic-bezier(0.2, 0.65, 0.25, 1) backwards;
+  .hero__photo {
+    animation: settle-in 950ms 240ms var(--ease-settle) backwards;
   }
 
-  .hero__echo span:nth-child(1) {
-    animation-delay: 280ms;
+  /* Plate 3, the gold outlines: each row is pulled out from behind the photo
+     slightly off register, then locks into place. */
+  .hero__echo > span {
+    animation: plate-pull var(--dur) var(--delay) backwards;
   }
 
-  .hero__echo span:nth-child(2) {
-    animation-delay: 360ms;
+  .hero__echo > span:nth-child(1) {
+    --delay: 420ms;
+    --dur: 1150ms;
   }
 
-  .hero__echo span:nth-child(3) {
-    animation-delay: 440ms;
+  .hero__echo > span:nth-child(2) {
+    --delay: 600ms;
+    --dur: 1000ms;
   }
 
-  .hero__star {
-    animation: star-in 460ms cubic-bezier(0.3, 0.7, 0.3, 1) backwards;
+  .hero__echo > span:nth-child(3) {
+    --delay: 820ms;
+    --dur: 1100ms;
   }
 
-  .hero__star--big {
-    animation-delay: 480ms;
-  }
-
+  /* The big and corner stars cover sparkles baked into the portrait, so they
+     ride with the photo; the free-standing one is stamped on. */
   .hero__star--small {
-    animation-delay: 560ms;
-  }
-
-  .hero__star--corner {
-    animation-delay: 620ms;
+    animation: stamp 300ms 1500ms var(--ease-out) backwards;
   }
 
   .hero__links {
-    animation: rise-in 440ms 520ms cubic-bezier(0.2, 0.65, 0.25, 1) backwards;
+    animation: fade-in 700ms 1250ms var(--ease-out) backwards;
   }
 
   .hero__intro {
-    animation: rise-in 440ms 620ms cubic-bezier(0.2, 0.65, 0.25, 1) backwards;
+    animation: fade-in 750ms 1550ms var(--ease-out) backwards;
   }
 
   .scroll {
-    animation: cue-in 420ms 680ms cubic-bezier(0.2, 0.65, 0.25, 1) backwards;
+    animation: cue-in 700ms 1850ms var(--ease-settle) backwards;
   }
 
-  /* Scroll reveals. Reveal.tsx only adds reveal-pending to blocks below the
-     fold, so server-rendered content is never hidden without JS. */
-  [data-reveal].reveal-pending {
+  /* ----- About: the portrait card is assembled from plates ----- */
+  [data-reveal="portrait"].reveal-pending .portrait__frame::before {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translate(-22px, 22px);
   }
 
-  [data-reveal].reveal-in {
+  /* The headshot opens like a lens aperture, centred on the face */
+  [data-reveal="portrait"].reveal-pending .portrait__img {
+    clip-path: circle(8% at 50% 40%);
+  }
+
+  [data-reveal="portrait"].reveal-pending .portrait__tag {
+    opacity: 0;
+    transform: scale(1.14);
+  }
+
+  [data-reveal="portrait"].reveal-in .portrait__frame::before {
     transition:
-      opacity 700ms cubic-bezier(0.2, 0.65, 0.25, 1) var(--d, 0ms),
-      transform 700ms cubic-bezier(0.2, 0.65, 0.25, 1) var(--d, 0ms);
+      opacity 300ms var(--ease-out),
+      transform 900ms var(--ease-out);
   }
 
-  [data-reveal="1"] {
-    --d: 110ms;
+  [data-reveal="portrait"].reveal-in .portrait__img {
+    clip-path: circle(50% at 50% 50%);
+    transition: clip-path 1100ms var(--ease-in-out) 350ms;
   }
 
-  [data-reveal="2"] {
-    --d: 200ms;
+  /* The greeting is dropped into place a word at a time, the opposite of the
+     hero's rising type: set from above, like type laid into the stick. */
+  [data-reveal="greeting"].reveal-pending .word {
+    opacity: 0;
+    transform: translateY(-0.45em);
   }
 
-  /* The diagram stays in place; its connectors draw and steps appear in order */
-  .pipeline.reveal-pending {
+  [data-reveal="greeting"].reveal-in .word {
+    transition:
+      opacity 360ms var(--ease-out) calc(var(--i) * 170ms),
+      transform 1000ms var(--ease-out) calc(var(--i) * 170ms);
+  }
+
+  [data-reveal="portrait"].reveal-in .portrait__tag {
+    transition:
+      opacity 180ms var(--ease-out) var(--tag-delay),
+      transform 300ms var(--ease-out) var(--tag-delay);
+  }
+
+  .portrait__tag--one {
+    --tag-delay: 820ms;
+  }
+
+  .portrait__tag--two {
+    --tag-delay: 980ms;
+  }
+
+  /* The black contact plate locks in smoothly, joining the work band */
+  [data-reveal="card"].reveal-pending {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+
+  [data-reveal="card"].reveal-in {
     opacity: 1;
-    transform: none;
+    transform: translate3d(0, 0, 0);
+    transition:
+      opacity 650ms var(--ease-enter) 80ms,
+      transform 750ms var(--ease-enter) 80ms;
   }
 
+  /* ----- Selected work ----- */
+  [data-reveal="rule"].reveal-pending::after {
+    transform: scaleX(0);
+  }
+
+  [data-reveal="rule"].reveal-in::after {
+    transition: transform 1100ms var(--ease-in-out) 150ms;
+  }
+
+  /* 01 is a gold plate: it wipes on off register, and only once the wipe
+     finishes does it lock into place. Insets are negative at rest so glyph
+     overshoot is never trimmed. */
+  [data-reveal="intro"].reveal-pending .case__no {
+    clip-path: inset(-30% 100% -30% -5%);
+    transform: translate(-0.045em, 0.03em);
+  }
+
+  [data-reveal="intro"].reveal-pending .case__title {
+    clip-path: inset(-25% -5% 100% -5%);
+    transform: translateY(0.35em);
+  }
+
+  [data-reveal="intro"].reveal-pending .case__lead {
+    opacity: 0;
+  }
+
+  [data-reveal="intro"].reveal-in .case__no {
+    clip-path: inset(-30% -5% -30% -5%);
+    transition:
+      clip-path 900ms var(--ease-in-out),
+      transform 500ms var(--ease-out) 820ms;
+  }
+
+  [data-reveal="intro"].reveal-in .case__title {
+    clip-path: inset(-25% -5% -35% -5%);
+    transition:
+      clip-path 1050ms var(--ease-enter) 260ms,
+      transform 1050ms var(--ease-enter) 260ms;
+  }
+
+  [data-reveal="intro"].reveal-in .case__lead {
+    transition: opacity 700ms var(--ease-out) 650ms;
+  }
+
+  /* The diagram is explanation, not decoration: connectors draw in order and
+     each step settles behind its line. Each lane triggers on its own as it
+     scrolls into view, so on a phone the answering lane is not drawn off-screen. */
   .lane__steps li {
-    --step: calc(var(--offset, 0ms) + var(--n, 0) * 140ms);
+    --step: calc(var(--offset, 0ms) + var(--n, 0) * 180ms);
   }
 
   .lane__steps li:nth-child(2) {
@@ -1427,77 +1924,323 @@ a.pill:hover {
     --n: 4;
   }
 
-  .lane + .lane .lane__steps {
-    --offset: 760ms;
-  }
-
-  .pipeline.reveal-pending .lane__steps li::before {
+  [data-reveal="lane"].reveal-pending .lane__steps li::before {
     transform: scaleX(0);
   }
 
-  .pipeline.reveal-pending .lane__steps li::after,
-  .pipeline.reveal-pending .lane__steps li > * {
+  [data-reveal="lane"].reveal-pending .lane__steps li::after,
+  [data-reveal="lane"].reveal-pending .lane__steps li > * {
     opacity: 0;
   }
 
-  .pipeline.reveal-pending .lane__steps li > * {
-    transform: translateY(8px);
+  [data-reveal="lane"].reveal-pending .lane__steps li > * {
+    transform: translateY(10px);
   }
 
-  .pipeline.reveal-in .lane__steps li::before {
-    transition: transform 420ms cubic-bezier(0.4, 0, 0.2, 1) var(--step);
+  [data-reveal="lane"].reveal-in .lane__steps li::before {
+    transition: transform 540ms var(--ease-in-out) var(--step);
   }
 
-  .pipeline.reveal-in .lane__steps li::after {
-    transition: opacity 200ms ease calc(var(--step) + 360ms);
+  [data-reveal="lane"].reveal-in .lane__steps li::after {
+    transition: opacity 260ms var(--ease-out) calc(var(--step) + 460ms);
   }
 
-  .pipeline.reveal-in .lane__steps li > * {
+  [data-reveal="lane"].reveal-in .lane__steps li > * {
     transition:
-      opacity 420ms ease calc(var(--step) + 120ms),
-      transform 420ms cubic-bezier(0.2, 0.65, 0.25, 1) calc(var(--step) + 120ms);
+      opacity 600ms var(--ease-settle) calc(var(--step) + 180ms),
+      transform 700ms var(--ease-enter) calc(var(--step) + 180ms);
+  }
+
+  /* Once the answering lane is drawn, one gold marker carries the question
+     through the five steps and fades at the response. It runs once. */
+  .lane {
+    container-type: inline-size;
+  }
+
+  .lane + [data-reveal="lane"].reveal-in .lane__steps::after {
+    content: "";
+    position: absolute;
+    top: -4px;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    background: var(--yellow);
+    animation: query-run 1600ms 1350ms var(--ease-in-out) both;
   }
 
   @media (max-width: 899px) {
-    .pipeline.reveal-pending .lane__steps li::before {
+    [data-reveal="lane"].reveal-pending .lane__steps li::before {
       transform: scaleY(0);
+    }
+
+    .lane + [data-reveal="lane"].reveal-in .lane__steps::after {
+      display: none;
+    }
+  }
+
+  /* Kisan Mitra's keypad demonstrates itself: 1, 2, 3 are pressed once, the
+     three menu choices the app reads aloud. It has its own trigger so the
+     presses happen while the keypad is on screen. */
+  [data-reveal="keypad"].reveal-in .keypad__key--menu {
+    animation: key-press 460ms var(--key) var(--ease-out) backwards;
+  }
+
+  .keypad__key--menu:nth-child(7) {
+    --key: 350ms;
+  }
+
+  .keypad__key--menu:nth-child(8) {
+    --key: 700ms;
+  }
+
+  .keypad__key--menu:nth-child(9) {
+    --key: 1050ms;
+  }
+
+  /* ----- Résumé ----- */
+  /* RESUME echoes the hero's gold plate: pulled on off register, then locked */
+  [data-reveal="plate"].reveal-pending > span {
+    clip-path: inset(-20% 100% -20% 0);
+    transform: translate(-0.05em, 0.035em);
+  }
+
+  [data-reveal="plate"].reveal-in > span {
+    clip-path: inset(-20% -2% -20% 0);
+    transition:
+      clip-path 850ms var(--ease-in-out) var(--row),
+      transform 450ms var(--ease-out) calc(var(--row) + 760ms);
+  }
+
+  .resume__echo > span:nth-child(2) {
+    --row: 140ms;
+  }
+
+  .resume__echo > span:nth-child(3) {
+    --row: 300ms;
+  }
+
+  /* Timelines: the rule draws down and each star is stamped as it arrives */
+  [data-reveal="timeline"].reveal-pending li::before {
+    transform: scaleY(0);
+  }
+
+  [data-reveal="timeline"].reveal-pending .timeline__star {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+
+  [data-reveal="timeline"].reveal-in li::before {
+    transition: transform 700ms var(--ease-in-out) calc(150ms + var(--line, 0) * 260ms);
+  }
+
+  [data-reveal="timeline"].reveal-in .timeline__star {
+    transition:
+      opacity 160ms var(--ease-out) var(--star, 100ms),
+      transform 300ms var(--ease-out) var(--star, 100ms);
+  }
+
+  .timeline li:nth-child(2) {
+    --line: 1;
+    --star: 780ms;
+  }
+
+  .timeline li:nth-child(3) {
+    --star: 1040ms;
+  }
+
+  /* The yellow plate slides into register first; the type is printed on it */
+  [data-reveal="panel"].reveal-pending::before {
+    opacity: 0;
+    transform: translate(-28px, 28px);
+  }
+
+  [data-reveal="panel"].reveal-pending > * {
+    opacity: 0;
+  }
+
+  [data-reveal="panel"].reveal-in::before {
+    transition:
+      opacity 300ms var(--ease-out),
+      transform 950ms var(--ease-out);
+  }
+
+  [data-reveal="panel"].reveal-in > * {
+    transition: opacity 650ms var(--ease-out) 480ms;
+  }
+
+  /* ----- Contact: the hero's mask rise, closing the page, and one stamp ----- */
+  [data-reveal="headline"].reveal-pending {
+    clip-path: inset(-20% -15% 100% -5%);
+    transform: translateY(0.3em);
+  }
+
+  [data-reveal="headline"].reveal-pending .contact__star {
+    opacity: 0;
+    transform: scale(1.35) rotate(-45deg);
+  }
+
+  [data-reveal="headline"].reveal-in {
+    clip-path: inset(-20% -15% -25% -5%);
+    transition:
+      clip-path 1100ms var(--ease-enter),
+      transform 1100ms var(--ease-enter);
+  }
+
+  [data-reveal="headline"].reveal-in .contact__star {
+    transition:
+      opacity 160ms var(--ease-out) 950ms,
+      transform 520ms var(--ease-out) 950ms;
+  }
+}
+
+/* Scroll-linked plate slip. Where scroll timelines exist, the gold outline
+   plates drift out of register as their section passes: the hero rows as it
+   scrolls away, RESUME as the résumé moves through view. Driven entirely by
+   scroll position, so nothing moves while the reader is still. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .hero__echo .drift {
+      animation: plate-slip linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 85vh;
+    }
+
+    .hero__echo > span:nth-child(1) .drift {
+      --slip: -4%;
+    }
+
+    .hero__echo > span:nth-child(2) .drift {
+      --slip: 6%;
+    }
+
+    .hero__echo > span:nth-child(3) .drift {
+      --slip: -7%;
+    }
+
+    .resume__echo .drift {
+      animation: plate-sweep linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+
+    .resume__echo > span:nth-child(1) .drift {
+      --slip: 5%;
+    }
+
+    .resume__echo > span:nth-child(2) .drift {
+      --slip: -4%;
+    }
+
+    .resume__echo > span:nth-child(3) .drift {
+      --slip: 7%;
     }
   }
 }
 
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
+@keyframes plate-slip {
+  to {
+    transform: translateX(var(--slip, 0%));
   }
 }
 
-@keyframes mask-up {
+@keyframes plate-sweep {
   from {
-    clip-path: inset(0 0 48% 0);
-    transform: translateY(0.14em);
+    transform: translateX(calc(var(--slip, 0%) * -1));
   }
   to {
-    clip-path: inset(-20% -5% -20% -5%);
+    transform: translateX(var(--slip, 0%));
+  }
+}
+
+@keyframes sort-set {
+  from {
+    clip-path: inset(-20% -10% 55% -10%);
+    transform: translateY(0.28em);
+  }
+  to {
+    clip-path: inset(-20% -10% -20% -10%);
     transform: none;
+  }
+}
+
+@keyframes query-run {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  10%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(calc(100cqw - 9px));
+  }
+}
+
+/* A key going down: pressed, the ink lifts to cream, then it springs back */
+@keyframes key-press {
+  40% {
+    transform: scale(0.9);
+    background: var(--cream);
+    border-color: var(--cream);
+  }
+}
+
+@keyframes nav-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Wipe on (strong in-out), then a short decelerating lock into register */
+@keyframes plate-pull {
+  from {
+    clip-path: inset(-20% 100% -20% 0);
+    transform: translate(-0.05em, 0.035em);
+    animation-timing-function: var(--ease-in-out);
+  }
+  68% {
+    clip-path: inset(-20% -2% -20% 0);
+    transform: translate(-0.05em, 0.035em);
+    animation-timing-function: var(--ease-out);
+  }
+  to {
+    clip-path: inset(-20% -2% -20% 0);
+    transform: none;
+  }
+}
+
+/* A stamp lands: slightly large and light, pressed down to size. Never from 0. */
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+  40% {
+    opacity: 1;
   }
 }
 
 @keyframes block-in {
   from {
-    clip-path: inset(14% 0 0 0);
-    transform: translateY(16px);
+    clip-path: inset(16% 0 0 0);
   }
   to {
     clip-path: inset(0);
-    transform: none;
   }
 }
 
-@keyframes star-in {
+@keyframes settle-in {
   from {
-    opacity: 0;
-    transform: scale(0.5) rotate(-25deg);
+    transform: translateY(18px);
   }
 }
 
